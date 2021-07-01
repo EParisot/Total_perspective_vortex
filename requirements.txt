@@ -1,3 +1,7 @@
+numpy
 mne
+sklearn
 PyQt5
-
+joblib
+matplotlib
+click
