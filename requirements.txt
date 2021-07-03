@@ -1,7 +1,8 @@
-numpy
-mne
-sklearn
-PyQt5
-joblib
-matplotlib
-click
+mne==0.23.0
+numpy==1.19.5
+scipy==1.6.3
+scikit-learn==0.24.2
+PyQt5==5.15.4
+joblib==1.0.1
+matplotlib==3.4.2
+click==8.0.1
