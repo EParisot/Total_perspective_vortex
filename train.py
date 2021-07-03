@@ -7,11 +7,12 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 import mne
-from mne.decoding import CSP
 from sklearn.pipeline import Pipeline
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import ShuffleSplit, StratifiedKFold, cross_val_score
 import joblib
+
+from CSP import CSP
 
 DATA_DIR = "data"
 SUBJECTS = [1] # 1 indexed
@@ -19,7 +20,6 @@ R_RUNS = [6, 10, 14] # hands versus foots real
 I_RUNS = [5, 9, 13] # hands versus foots imaginary
 
 save_name = "TPV_pipeline.joblib"
-
 
 def get_dataset(data_path, subjects, runs, verbose=True):
 	# get subjects files names
@@ -103,16 +103,12 @@ def main(data_path, subjects, runs, verbose):
 	cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
 	# build pipeline
 	lda = LinearDiscriminantAnalysis()
-	# TODO replace by own CSP
-	csp = CSP(n_components=4, reg=None, log=True, norm_trace=False, )
+	# own CSP
+	csp = CSP(n_components=4)
 	clf = Pipeline([('CSP', csp), ('LDA', lda)])
 	# run training
 	scores = cross_val_score(clf, X.get_data(), y, cv=cv, n_jobs=1)
 	# Printing the results
-	if verbose:
-		csp.fit_transform(X.get_data(), y)
-		csp.plot_patterns(X.info, ch_type='eeg', units='Patterns (AU)', size=1.5)
-		plt.show(block=True)
 	class_balance = np.mean(y == 0)
 	class_balance = max(class_balance, 1. - class_balance)
 	print("Classification accuracy: %f / Chance level: %f" % (np.mean(scores), class_balance))
