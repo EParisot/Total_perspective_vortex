@@ -21,7 +21,7 @@ I_RUNS = [5, 9, 13] # hands versus foots imaginary
 
 save_name = "TPV_pipeline.joblib"
 
-def get_dataset(data_path, subjects, runs, verbose=True):
+def get_dataset(data_path, subjects, runs, apply_filter=True, verbose=True):
 	# get subjects files names
 	raw_fnames = {}
 	for i, d in enumerate(os.listdir(data_path)):
@@ -60,6 +60,9 @@ def get_dataset(data_path, subjects, runs, verbose=True):
 	montage = mne.channels.make_standard_montage("standard_1020")
 	mne.datasets.eegbci.standardize(dataset)  # set channel names
 	dataset.set_montage(montage)
+	# low / high cut filter
+	if apply_filter:
+		dataset.filter(7, 30, fir_design='firwin', skip_by_annotation='edge')
 
 	if verbose:
 		montage.plot()
@@ -91,8 +94,7 @@ def main(data_path, subjects, runs, verbose):
 		print("ERROR: Invalid Subject %d" % subjects)
 		exit(0)
 	# get data
-	dataset = get_dataset(data_path, [subjects], runs, verbose=verbose)
-	dataset.filter(7, 30, fir_design='firwin', skip_by_annotation='edge')
+	dataset = get_dataset(data_path, [subjects], runs, apply_filter=True, verbose=verbose)
 	if verbose:
 		mne.viz.plot_raw(dataset, scalings={"eeg": 75e-6}, block=True)
 	# parse data

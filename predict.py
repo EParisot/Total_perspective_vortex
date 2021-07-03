@@ -24,8 +24,7 @@ def main(data_path, subjects, runs, model, verbose):
 		print("ERROR: Invalid Subject %d" % subjects)
 		exit(0)
 	# get data
-	dataset = get_dataset(data_path, [subjects], runs, verbose=verbose)
-	dataset.filter(7, 30, fir_design='firwin', skip_by_annotation='edge')
+	dataset = get_dataset(data_path, [subjects], runs, apply_filter=True, verbose=verbose)
 	# parse data
 	X, y = get_Xy(dataset)
 	# set CV
