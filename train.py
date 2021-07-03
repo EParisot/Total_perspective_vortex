@@ -95,8 +95,6 @@ def main(data_path, subjects, runs, verbose):
 		exit(0)
 	# get data
 	dataset = get_dataset(data_path, [subjects], runs, apply_filter=True, verbose=verbose)
-	if verbose:
-		mne.viz.plot_raw(dataset, scalings={"eeg": 75e-6}, block=True)
 	# parse data
 	X, y = get_Xy(dataset)
 	# set CV
