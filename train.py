@@ -92,7 +92,6 @@ def main(data_path, subjects, runs, verbose):
 		exit(0)
 	# get data
 	dataset = get_dataset(data_path, [subjects], runs, verbose=verbose)
-	# apply firwin filter
 	dataset.filter(7, 30, fir_design='firwin', skip_by_annotation='edge')
 	if verbose:
 		mne.viz.plot_raw(dataset, scalings={"eeg": 75e-6}, block=True)
@@ -101,19 +100,24 @@ def main(data_path, subjects, runs, verbose):
 	# set CV
 	n_splits = 5  # how many folds to use for StratifiedKFold
 	cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-	# build pipeline
+	# classifer
 	lda = LinearDiscriminantAnalysis()
 	# own CSP
 	csp = CSP(n_components=4)
-	clf = Pipeline([('CSP', csp), ('LDA', lda)])
+	# scaler
+	sca = mne.decoding.Scaler(X.info)
+	X = X.get_data()
+	# build pipeline
+	pipeline = Pipeline([('SCA', sca), ('CSP', csp), ('LDA', lda)])
 	# run training
-	scores = cross_val_score(clf, X.get_data(), y, cv=cv, n_jobs=1)
-	# Printing the results
+	pipeline = pipeline.fit(X, y)
+	scores = cross_val_score(pipeline, X, y, cv=cv, n_jobs=1)
+	# printing the results
 	class_balance = np.mean(y == 0)
 	class_balance = max(class_balance, 1. - class_balance)
 	print("Classification accuracy: %f / Chance level: %f" % (np.mean(scores), class_balance))
-
-	joblib.dump(clf, save_name)
+	# save pipeline
+	joblib.dump(pipeline, save_name)
 	print("model saved to %s" % save_name)
 
 if __name__ == "__main__":

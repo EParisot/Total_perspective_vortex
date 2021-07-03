@@ -12,7 +12,7 @@ class CSP():
 			x_class = X[y == this_class]
 			x_class = np.transpose(x_class, [1, 0, 2])
 			x_class = x_class.reshape(n_channels, -1)
-			# calc covar matrix
+			# calc covar matrix 1/n * sum((X.T - X.T.mean) * (X - X.mean))
 			covar_matrix = np.cov(x_class)
 			covs.append(covar_matrix)
 		return np.stack(covs)
@@ -22,7 +22,7 @@ class CSP():
 		self._classes = np.unique(y)
 		# compute covs matrices
 		covs = self.compute_cov_matrix(X, y)
-		# decompose covs to eigen vectors and values
+		# decompose covs to eigen vectors and values (solve generalized eigenvalue problem)
 		eigval, eigvec = linalg.eigh(covs[0], covs.sum(0))
 		# sort components
 		ix = np.argsort(np.abs(eigval - 0.5))[::-1]
