@@ -16,12 +16,16 @@ from CSP import CSP
 
 DATA_DIR = "data"
 SUBJECTS = [1] # 1 indexed
-R_RUNS = [6, 10, 14] # hands versus foots real
-I_RUNS = [5, 9, 13] # hands versus foots imaginary
+
+R1_RUNS = [6, 10, 14] # hands versus foots real
+I1_RUNS = [5, 9, 13] # hands versus foots imaginary
+R2_RUNS = [4, 8, 12] # left vs right hand real
+I2_RUNS = [3, 7, 11] # left vs right hand imaginary
+
 
 save_name = "TPV_pipeline.joblib"
 
-def get_dataset(data_path, subjects, runs, apply_filter=True, verbose=True):
+def get_dataset(data_path, task, subjects, runs, apply_filter=True, verbose=True):
 	# get subjects files names
 	raw_fnames = {}
 	for i, d in enumerate(os.listdir(data_path)):
@@ -29,10 +33,16 @@ def get_dataset(data_path, subjects, runs, apply_filter=True, verbose=True):
 			raw_fnames[d] = os.listdir(os.path.join(data_path, d))
 	# for subjects, read runs
 	_runs = []
-	if runs == "real" or runs == "both":
-		_runs += R_RUNS
-	if runs == "imaginary" or runs == "both":
-		_runs += I_RUNS
+	if task == "handsvsfoot" or task == "both":
+		if runs == "real" or runs == "both":
+			_runs += R1_RUNS
+		if runs == "imaginary" or runs == "both":
+			_runs += I1_RUNS
+	if task == "leftvsrighthand" or task == "both":
+		if runs == "real" or runs == "both":
+			_runs += R2_RUNS
+		if runs == "imaginary" or runs == "both":
+			_runs += I2_RUNS
 	dataset = []
 	sfreq = None
 	for d in raw_fnames:
@@ -86,15 +96,16 @@ def get_Xy(dataset):
 
 @click.command()
 @click.argument('data_path', type=click.Path(exists=True), default=DATA_DIR)
-@click.option('-s', '--subjects', required=False, type=int, default=1)
+@click.option('-t', '--task', type=click.Choice(['handsvsfoot', 'leftvsrighthand'], case_sensitive=False), default="handsvsfoot")
+@click.option('-s', '--subject', required=False, type=int, default=1)
 @click.option('-r', '--runs', required=False, type=click.Choice(['real', 'imaginary', 'both'], case_sensitive=False), default="both")
 @click.option('-v', '--verbose', is_flag=True)
-def main(data_path, subjects, runs, verbose):
-	if subjects <= 0 or subjects > 109:
-		print("ERROR: Invalid Subject %d" % subjects)
+def main(data_path, task, subject, runs, verbose):
+	if subject <= 0 or subject > 109:
+		print("ERROR: Invalid Subject %d" % subject)
 		exit(0)
 	# get data
-	dataset = get_dataset(data_path, [subjects], runs, apply_filter=True, verbose=verbose)
+	dataset = get_dataset(data_path, task, [subject], runs, apply_filter=True, verbose=verbose)
 	# parse data
 	X, y = get_Xy(dataset)
 	# set CV
@@ -110,8 +121,8 @@ def main(data_path, subjects, runs, verbose):
 	# build pipeline
 	pipeline = Pipeline([('SCA', sca), ('CSP', csp), ('LDA', lda)])
 	# run training
-	pipeline = pipeline.fit(X, y)
 	scores = cross_val_score(pipeline, X, y, cv=cv, n_jobs=1)
+	pipeline = pipeline.fit(X, y)
 	# printing the results
 	class_balance = np.mean(y == 0)
 	class_balance = max(class_balance, 1. - class_balance)

@@ -1,7 +1,8 @@
 import numpy as np
 from scipy import linalg
+from sklearn.base import BaseEstimator, TransformerMixin
 
-class CSP():
+class CSP(BaseEstimator, TransformerMixin):
 	def __init__(self, n_components=4):
 		self.n_components = n_components
 		
@@ -12,7 +13,7 @@ class CSP():
 			x_class = X[y == this_class]
 			x_class = np.transpose(x_class, [1, 0, 2])
 			x_class = x_class.reshape(n_channels, -1)
-			# calc covar matrix 1/n * sum((X.T - X.T.mean) * (X - X.mean))
+			# calc covar matrix for class
 			covar_matrix = np.cov(x_class)
 			covs.append(covar_matrix)
 		return np.stack(covs)
@@ -32,7 +33,7 @@ class CSP():
 		return self
     
 	def transform(self, X):
-		# pick filters to keep
+		# apply filters
 		pick_filters = self.filters_[:self.n_components]
 		X = np.asarray([np.dot(pick_filters, epoch) for epoch in X])
 		# compute features (mean power)
