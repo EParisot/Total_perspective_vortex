@@ -122,12 +122,12 @@ def main(data_path, task, subject, runs, verbose):
 	pipeline = Pipeline([('SCA', sca), ('CSP', csp), ('LDA', lda)])
 	# run training
 	scores = cross_val_score(pipeline, X, y, cv=cv, n_jobs=1)
-	pipeline = pipeline.fit(X, y)
 	# printing the results
 	class_balance = np.mean(y == 0)
 	class_balance = max(class_balance, 1. - class_balance)
 	print("Classification accuracy: %f / Chance level: %f" % (np.mean(scores), class_balance))
-	# save pipeline
+	# save pipeline trained on all data
+	pipeline = pipeline.fit(X, y)
 	joblib.dump(pipeline, save_name)
 	print("model saved to %s" % save_name)
 
