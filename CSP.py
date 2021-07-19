@@ -5,6 +5,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 class CSP(BaseEstimator, TransformerMixin):
 	def __init__(self, n_components=4):
 		self.n_components = n_components
+
+	def calc_covar(self, X, ddof=1):
+		"""https://numpy.org/doc/stable/reference/generated/numpy.cov.html"""
+		X -= np.average(X, axis=1)[:, None] # normalisation
+		return np.squeeze(np.dot(X, X.T) / (X.shape[1] - ddof)) # actual cov calc
 		
 	def compute_cov_matrix(self, X, y):
 		_, n_channels, _ = X.shape
@@ -14,7 +19,7 @@ class CSP(BaseEstimator, TransformerMixin):
 			x_class = np.transpose(x_class, [1, 0, 2])
 			x_class = x_class.reshape(n_channels, -1)
 			# calc covar matrix for class
-			covar_matrix = np.cov(x_class)
+			covar_matrix = self.calc_covar(x_class)
 			covs.append(covar_matrix)
 		return np.stack(covs)
 
